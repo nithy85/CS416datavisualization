@@ -1,0 +1,17 @@
+<html>
+<script src='https://d3js.org/d3.v5.min.js'></script>
+<style> line {} </style>
+
+<body onload='init()'>
+
+<svg width=600 height=600>
+</svg>
+
+<script>
+async function init() {
+const data = await d3.csv("C:\Users\arumu\OneDrive\Desktop\New folder\Nithya_docs\JPM.csv");
+console.log(data)
+
+</script>
+</body>
+</html>
