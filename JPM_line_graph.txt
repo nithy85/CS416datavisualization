@@ -9,9 +9,9 @@
 
 <script>
 async function init() {
-const data = await d3.csv("C:\Users\arumu\OneDrive\Desktop\New folder\Nithya_docs\JPM.csv");
+const data = await d3.csv("https://github.com/nithy85/CS416datavisualization/blob/main/JPM.csv");
 console.log(data)
-
+}
 </script>
 </body>
 </html>
