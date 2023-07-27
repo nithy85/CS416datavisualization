@@ -1,10 +1,10 @@
 <html>
 <script src='https://d3js.org/d3.v5.min.js'></script>
-
+<script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
 <body onload='init()'>
 
 <div id="dd-container">
-	<label for="dd_stock_name"><strong>Please select a stock:</strong></label>
+	<label for="dd_stock_name"><strong>Please select a stock to visualize the stock price:</strong></label>
 	<select id="dd_stock_name">
 		<option value="JPM">JPMorgan Chase & Co</option>
 		<option value="BOC">Bank of America Corporation</option>
@@ -19,8 +19,8 @@
 	</select>
 </div>	
 
-<div id="chart-container">
-</div>
+<div id="text-containter"><p></p></div>
+<div id="chart-container"></div>
 
 
 <script>
@@ -30,9 +30,18 @@ async function init()
 	//Intial chart with entire dataset of 5 years of JPM
 	//------------------------------------------------------
 	const JPM_data = await d3.csv("https://nithy85.github.io/CS416datavisualization/JPM.csv");
-	var initial_title="JPMorgan Chase & Co- Historical stock Price"
-	//line_graph(JPM_data,initial_title)
-	date_range_filter(JPM_data,initial_title)
+	var initial_title="Visualization of JPMorgan Chase - Historical stock Price"
+	d3.select("#text-containter").select("p").remove()
+	d3.select("#text-containter")
+	.selectAll("p")
+	.data(["JPMorgan Chase & Co. is an American multinational financial services firm headquartered in New York City and incorporated in Delaware.It is the largest bank in the United States and the world's largest bank by market capitalization."])
+	.enter()
+	.append("p")
+	.text((d) => 
+	{
+        return d;
+    });		
+	date_range_filter(JPM_data,initial_title)		
 
 	//Load data of BOC and GS
 	//---------------------------
@@ -49,19 +58,52 @@ async function init()
 			if(selectedValue=="JPM")
 			{
 				data=JPM_data
-				title="JPMorgan Chase & Co - Historical stock Price"
+				title="Visualization of JPMorgan Chase - Historical stock Price"
+				d3.select("#text-containter").select("p").remove()
+				d3.select("#text-containter")
+					.selectAll("p")
+					.data(["JPMorgan Chase & Co. is an American multinational financial services firm headquartered in New York City and incorporated in Delaware.It is the largest bank in the United States and the world's largest bank by market capitalization."])
+					.enter()
+					.append("p")
+					.text((d) => 
+					{
+                    	return d;
+                	});				
+				daterange_setdefault()
 				date_range_filter(data,title)
 			}
 			else if(selectedValue=="BOC")
 			{
 				data=BAC_data
-				title="Bank of America Corporation - Historical stock Price"
+				title="Visualization of Bank of America - Historical stock Price"
+				d3.select("#text-containter").select("p").remove()
+				d3.select("#text-containter")
+					.selectAll("p")
+					.data(["The Bank of America Corporation is an American multinational investment bank and financial services holding company headquartered at the Bank of America Corporate Center in Charlotte, North Carolina, with investment banking and auxiliary headquarters in Manhattan."])
+					.enter()
+					.append("p")
+					.text((d) => 
+					{
+                    	return d;
+                	});
+				daterange_setdefault()
 				date_range_filter(data,title)
 			}
 			else if(selectedValue=="GS")
 			{
 				 data=GS_data
-				 title="Goldman Sachs BDC - Historical stock Price"
+				 title="Visualization of Goldman Sachs- Historical stock Price"
+				 d3.select("#text-containter").select("p").remove()
+				 d3.select("#text-containter")
+					.selectAll("p")
+					.data(["The Goldman Sachs Group, Inc is an American multinational investment bank and financial services company. Founded in 1869, Goldman Sachs is headquartered at 200 West Street in Lower Manhattan."])
+					.enter()
+					.append("p")
+					.text((d) => 
+					{
+                    	return d;
+                	});
+				 daterange_setdefault()
 				 date_range_filter(data,title)
 			}
 		 }
@@ -161,6 +203,10 @@ async function init()
 		var lowClose = d3.min(data, function(d) { return d.close; });
 		var highClose = d3.max(data, function(d) { return d.close; });
 
+		//Date of highest closing
+		//-----------------------
+		var highClose_date = d3.max(data, function(d) { return d.Date; });
+
 		const width=1000
 		const height=600
 		const margin=50
@@ -195,7 +241,7 @@ async function init()
 			.datum(data)
 			.attr("fill", "none")
 			.attr("stroke", "blue")
-			.attr("stroke-width", 2)
+			.attr("stroke-width", 1)
 			.attr("d", line);
 
 			// Chart title
@@ -280,12 +326,35 @@ async function init()
 				.attr("y2", height)
 				.attr("stroke", "gray")
 				.attr("stroke-dasharray", "5,5");
-				})
-				.on("mouseout", () =>
+			})
+			.on("mouseout", () =>
+			{
+				// Remove tooltip on mouse-out
+				svg.select(".tooltip").remove();
+			});
+	
+			//Define Annotations
+			//-------------------
+			//console.log(title.substring(17,21))
+			var annotation_title=""
+			if (title.substring(17,21)=="JPMo")
+				{annotation_title="JPM"}
+			else if(title.substring(17,21)=="Bank")
+				{annotation_title="Bank of America"}
+			else if(title.substring(17,21)=="Gold")
+				{annotation_title="Goldman Sachs"}
+			const annotationList = 
+			[{
+    			note: 
 				{
-					// Remove tooltip on mouse-out
-					svg.select(".tooltip").remove();
-				});
+					label: "Highest closing price is "+highClose+" on the Date '"+highClose_date+"'",
+      				title: annotation_title
+    			},
+				x: 250,
+    			y: 80,
+    			dy: 100,
+    			dx: 100
+  			}]
 
 		//Construct X and Y axis
 		d3.select("svg").append("g")
@@ -295,8 +364,21 @@ async function init()
 		d3.select("svg").append("g")
 		.attr("transform","translate("+margin+","+margin+")")
 		.call(d3.axisLeft(yscale))
-	}
 
+		// Add annotation to the chart
+		const makeAnnotations = d3.annotation().disable(["connector"]).annotations(annotationList)
+			d3.select("svg")
+  			.append("g")
+  			.call(makeAnnotations)
+	}
+	//Set default value to the date range dropdown
+	//-----------------------------------------------
+	function daterange_setdefault()
+	{
+		var defaultValue = "5years";
+		d3.select("#dd_date_range")
+		.property("value", defaultValue);
+	}
 }
 </script>
 </body>
