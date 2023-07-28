@@ -274,8 +274,9 @@ async function init()
 			.append("circle")
 			.attr("cx", d => xscale(d.formated_date))
 			.attr("cy", d => yscale(d.close))
-			.attr("r", 3)
-			.attr("fill-opacity",0.10)
+			.attr("r", 1.5)
+			.attr("fill","blue")
+			//.attr("fill-opacity",0.10)
 			.on("mouseover", (d) => 
 			{
 				// Tooltip on mouse-over
@@ -367,13 +368,6 @@ async function init()
   		svg.append("g")
     	.attr("class", "annotation-group")
     	.call(makeAnnotations);
-
-  		/* Add annotation to the chart
-		const makeAnnotations = d3.annotation().disable(["connector"]).annotations(annotationList)
-			d3.select("svg")
-  			.append("g")
-  			.call(makeAnnotations)*/
-	
 
 		//Construct X and Y axis
 		d3.select("svg").append("g")
