@@ -1,0 +1,391 @@
+<html>
+<script src='https://d3js.org/d3.v5.min.js'></script>
+<script src="https://rawgit.com/susielu/d3-annotation/master/d3-annotation.min.js"></script>
+<body onload='init()'>
+<div id="dd-container">
+	<label for="dd_stock_name"><strong>Please select a stock to visualize the stock price:</strong></label>
+	<select id="dd_stock_name">
+		<option value="JPM">JPMorgan Chase & Co</option>
+		<option value="BOC">Bank of America Corporation</option>
+		<option value="GS">Goldman Sachs BDC</option>
+	</select>
+	<label for="dd_date_range"><strong>Please select a date range:</strong></label>
+	<select id="dd_date_range">
+		<option value="5years">5 Years</option>
+		<option value="1year">1 Year</option>
+		<option value="3months">3 Months</option>
+		<option value="1month">1 Month</option>
+	</select>
+</div>	
+
+<div id="text-containter"><p></p></div>
+<div id="chart-container"></div>
+
+
+<script>
+async function init() 
+{
+	//Intial chart with entire dataset of 5 years of JPM
+	//------------------------------------------------------
+	const JPM_data = await d3.csv("https://nithy85.github.io/CS416datavisualization/JPM.csv");
+	var initial_title="Visualization of JPMorgan Chase - Historical stock Price"
+	d3.select("#text-containter").select("p").remove()
+	d3.select("#text-containter")
+	.selectAll("p")
+	.data(["JPMorgan Chase & Co. is an American multinational financial services firm headquartered in New York City and incorporated in Delaware.It is the largest bank in the United States and the world's largest bank by market capitalization."])
+	.enter()
+	.append("p")
+	.text((d) => 
+	{
+        return d;
+    });		
+	date_range_filter(JPM_data,initial_title)		
+
+	//Load data of BOC and GS
+	//---------------------------
+	const BAC_data = await d3.csv("https://nithy85.github.io/CS416datavisualization/BAC.csv");
+	const GS_data = await d3.csv("https://nithy85.github.io/CS416datavisualization/GS.csv");
+
+	
+	//Choose data based on stock name dropdown selection
+	//----------------------------------------------------
+		d3.select("#dd_stock_name")
+		.on("change", function () 
+		 {
+            const selectedValue = this.value;
+			if(selectedValue=="JPM")
+			{
+				data=JPM_data
+				title="Visualization of JPMorgan Chase - Historical stock Price"
+				d3.select("#text-containter").select("p").remove()
+				d3.select("#text-containter")
+					.selectAll("p")
+					.data(["JPMorgan Chase & Co. is an American multinational financial services firm headquartered in New York City and incorporated in Delaware.It is the largest bank in the United States and the world's largest bank by market capitalization."])
+					.enter()
+					.append("p")
+					.text((d) => 
+					{
+                    	return d;
+                	});				
+				daterange_setdefault()
+				date_range_filter(data,title)
+			}
+			else if(selectedValue=="BOC")
+			{
+				data=BAC_data
+				title="Visualization of Bank of America - Historical stock Price"
+				d3.select("#text-containter").select("p").remove()
+				d3.select("#text-containter")
+					.selectAll("p")
+					.data(["The Bank of America Corporation is an American multinational investment bank and financial services holding company headquartered at the Bank of America Corporate Center in Charlotte, North Carolina, with investment banking and auxiliary headquarters in Manhattan."])
+					.enter()
+					.append("p")
+					.text((d) => 
+					{
+                    	return d;
+                	});
+				daterange_setdefault()
+				date_range_filter(data,title)
+			}
+			else if(selectedValue=="GS")
+			{
+				 data=GS_data
+				 title="Visualization of Goldman Sachs- Historical stock Price"
+				 d3.select("#text-containter").select("p").remove()
+				 d3.select("#text-containter")
+					.selectAll("p")
+					.data(["The Goldman Sachs Group, Inc is an American multinational investment bank and financial services company. Founded in 1869, Goldman Sachs is headquartered at 200 West Street in Lower Manhattan."])
+					.enter()
+					.append("p")
+					.text((d) => 
+					{
+                    	return d;
+                	});
+				 daterange_setdefault()
+				 date_range_filter(data,title)
+			}
+		 })
+	
+	// Filter data based on date range selection in dropdown
+	//--------------------------------------------------------
+	function date_range_filter(data,title)
+	{
+		const currentdate = new Date();
+		const currentyear = currentdate.getFullYear();
+		const currentmonth = currentdate.getMonth();
+
+		var done=false
+		d3.select("#dd_date_range")
+			.on("change", function () 
+			{
+				const selectedValue = this.value;
+				if(selectedValue=="5years")
+				{
+					var filteredData = data; 
+					d3.selectAll("svg").remove();
+					line_graph(filteredData,title);
+					done=true
+				}
+				if(selectedValue=="1year")
+				{
+					var filteredData = data.filter(function(d) 
+					{ 
+						const data_year= (new Date(d.Date)).getFullYear()
+						if(data_year==currentyear)
+						{ 
+							return d;
+						} 
+					}) 
+					d3.selectAll("svg").remove();
+					line_graph(filteredData,title)
+					done=true
+				}
+				if(selectedValue=="3months")
+				{
+					var filteredData = data.filter(function(d) 
+					{ 
+						const data_year= (new Date(d.Date)).getFullYear()
+						if(data_year==currentyear)
+						{ 
+							const data_month= (new Date(d.Date)).getMonth()
+							if(data_month >= (currentmonth-2))
+							{
+								return d;
+							}
+						} 
+					}) 
+					d3.selectAll("svg").remove();
+					line_graph(filteredData,title)
+					done=true
+				}
+				if(selectedValue=="1month")
+				{
+					var filteredData = data.filter(function(d) 
+					{ 
+						const data_year= (new Date(d.Date)).getFullYear()
+						if(data_year==currentyear)
+						{ 
+							const data_month= (new Date(d.Date)).getMonth()
+							if(currentmonth == data_month)
+							{
+								return d;
+							}
+						} 
+					}) 
+					d3.selectAll("svg").remove();
+					line_graph(filteredData,title)
+					done=true
+				}
+
+			})
+			if(done==false)
+			{
+				d3.selectAll("svg").remove();
+				line_graph(data,title)
+			}
+	}
+	
+	function line_graph(data,title)
+	{
+		//Type convertion of date and numeric values
+		data.forEach(function(d)
+		{
+	    	d.formated_date = new Date(d.Date);
+    		d.close = +d.Close;
+  		});
+		//Find domain values of date and close fields in the file
+		var minDate = d3.min(data, function(d) {return d.formated_date;});
+		var maxDate = d3.max(data, function(d) {return d.formated_date;});
+		var lowClose = d3.min(data, function(d) { return d.close; });
+		var highClose = d3.max(data, function(d) { return d.close; });
+
+		//Date of highest closing
+		//-----------------------
+		const highClose_date = data.find(d => +d.close === highClose).Date;
+		const formatted_highclosedt= new Date(highClose_date);
+
+		const width=1000
+		const height=600
+		const margin=50
+
+		xdomain=[minDate,maxDate]
+		ydomain=[lowClose-30,highClose+30]
+		xrange=[0,width]
+		yrange=[height,0]	
+
+		console.log(xdomain)
+		console.log(ydomain)
+		
+		var xscale = d3.scaleTime().domain(xdomain).range(xrange);
+		var yscale = d3.scaleLinear().domain(ydomain).range(yrange);
+
+			// Appending SVG element to the chart-container
+			const svg = d3
+			.select("#chart-container")
+			.append("svg")
+			.attr("width", width)
+			.attr("height", height)
+			.append("g")
+			.attr("transform", `translate(${margin}, ${margin})`);
+
+			// Line construction 
+			const line = d3.line()
+			.x(d => xscale(d.formated_date))
+			.y(d => yscale(d.close));
+
+			// Line chart
+			svg.append("path")
+			.datum(data)
+			.attr("fill", "none")
+			.attr("stroke", "blue")
+			.attr("stroke-width", 1)
+			.attr("d", line);
+
+			// Chart title
+			svg.append("text")
+			.attr("x", width / 2)
+			.attr("y", -10)
+			.attr("text-anchor", "middle")
+			.attr("font-size", 32)
+			.attr("font-weight", "bold")
+			.attr("fill", "blue")
+			.text(title);
+
+			// X-axis label
+			svg.append("text")
+			.attr("x", width / 2)
+			.attr("y", height - 50)
+			.attr("text-anchor", "middle")
+			.text("Date");
+
+			// Y-axis label
+			svg.append("text")
+			.attr("transform", "rotate(-90)")
+			.attr("x", -height/2)
+			.attr("y", -40)
+			.attr("text-anchor", "middle")
+			.text("Closing Price");
+
+			// Adding data points as circles 
+			svg.selectAll("circle")
+			.data(data)
+			.enter()
+			.append("circle")
+			.attr("cx", d => xscale(d.formated_date))
+			.attr("cy", d => yscale(d.close))
+			.attr("r", 1.5)
+			.attr("fill","blue")
+			//.attr("fill-opacity",0.10)
+			.on("mouseover", (d) => 
+			{
+				// Tooltip on mouse-over
+				const tooltip = 
+				svg.append("g")
+				.attr("class", "tooltip")
+				.attr("transform", 'translate(50,50)')
+				.attr('font-style',"oblique")
+
+				tooltip.append("text")
+				.attr("x", 10)
+				.attr("y", -10)
+				.text('Date:'+d.Date)
+
+				tooltip.append("text")
+				.attr("x", 10)
+				.attr("y", 10)
+				.text('Open:'+d.Open)
+
+				tooltip.append("text")
+				.attr("x", 10)
+				.attr("y", 30)
+				.text('High:'+d.High)
+
+				tooltip.append("text")
+				.attr("x", 10)
+				.attr("y", 50)
+				.text('Low:'+d.Low)
+
+				tooltip.append("text")
+				.attr("x", 10)
+				.attr("y", 70)
+				.text('Close:'+ d.close)
+
+				tooltip.append("text")
+				.attr("x", 10)
+				.attr("y", 90)
+				.text('Volume:'+d.Volume)
+
+				// Add a vertical line to indicate the data point on the x-axis
+				tooltip.append("line")
+				.attr("transform", `translate(${xscale(d.formated_date)-50},${yscale(d.close)-50})`)
+				.attr("x1", 0)
+				.attr("y1", -height)
+				.attr("x2", 0)
+				.attr("y2", height)
+				.attr("stroke", "gray")
+				.attr("stroke-dasharray", "5,5");
+			})
+			.on("mouseout", () =>
+			{
+				// Remove tooltip on mouse-out
+				svg.select(".tooltip").remove();
+			});
+	
+			//Define Annotations
+			//-------------------
+			//console.log(title.substring(17,21))
+			var annotation_title=""
+			if (title.substring(17,21)=="JPMo")
+				{annotation_title="JPM"}
+			else if(title.substring(17,21)=="Bank")
+				{annotation_title="Bank of America"}
+			else if(title.substring(17,21)=="Gold")
+				{annotation_title="Goldman Sachs"}
+			
+				const annotationList = 
+			[{
+    			note: 
+				{
+					label: "Highest closing price is "+highClose+" on the Date '"+highClose_date+"'",
+      				title: annotation_title
+    			},
+				//x: 250,
+    			//y: 80,
+				x: xscale(formatted_highclosedt),
+    			y: yscale(highClose),
+    			dx: -50,
+    			dy: -5,
+				color: "red",
+    			subject: { radius: 8, radiusPadding: 5 }
+  			}]
+
+  		// Create the annotation group and add annotations to the chart
+  		const makeAnnotations = d3.annotation()
+    	.type(d3.annotationCalloutCircle)
+    	.annotations(annotationList);
+
+  		svg.append("g")
+    	.attr("class", "annotation-group")
+    	.call(makeAnnotations);
+
+		//Construct X and Y axis
+		d3.select("svg").append("g")
+		.attr("transform","translate("+margin+","+(margin+530)+")")
+		.call(d3.axisBottom(xscale))
+
+		d3.select("svg").append("g")
+		.attr("transform","translate("+margin+","+margin+")")
+		.call(d3.axisLeft(yscale))
+	}
+	//Set default value to the date range dropdown
+	//-----------------------------------------------
+	function daterange_setdefault()
+	{
+		var defaultValue = "5years";
+		d3.select("#dd_date_range")
+		.property("value", defaultValue);
+	}
+}
+</script>
+</body>
+</html>
